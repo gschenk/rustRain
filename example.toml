@@ -1,0 +1,5 @@
+# duration of rain in days
+duration = 4
+
+# landscape profile as array of height values
+profile = [ 2, 4, 1, 0, 3 ]

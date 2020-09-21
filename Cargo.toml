@@ -2,7 +2,8 @@
 name = "rain"
 version = "0.0.1"
 authors = ["gerald schenk <gschenk@gmx.net>"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+edition = "2018"
 
 [dependencies]
+serde = { version = "1.0", features = ["derive"] }
+toml = { version = "0.5.6" }
