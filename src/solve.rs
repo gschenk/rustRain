@@ -1,3 +1,5 @@
+// module solve provides structures to store results and functions to
+// calculate the equilibrium state of water
 use super::{f64equal, Problem};
 
 // Solution stores results
@@ -35,20 +37,37 @@ pub fn categorise(problem: Problem) -> &'static str {
     if f64equal(problem.water_0, 0.0) {
         return "dry";
     }
-    // casting to a u64 is harmless here as it is the result of
-    // integer arithmetic
+    if problem.ground_max == problem.ground_min {
+        return "flat_ground";
+    }
     if problem.water_tot == problem.saturation_water {
         return "saturation";
     }
     if problem.water_tot > problem.saturation_water {
         return "above_saturation";
     }
-    if problem.ground_max == problem.ground_min {
-        return "flat_ground";
-    }
 
     // general problem
     return "general";
+}
+
+// all solver functions must have the same signature:
+// fn f(p: Problem) -> Solution { ... }
+
+// trivial solver for a dry world
+fn dry(problem: Problem) -> Solution {
+    let levels = problem.grounds.clone();
+    return Solution::new(levels, &problem.grounds);
+}
+
+// trivial solver for a flat world
+fn flat(problem: Problem) -> Solution {
+    let levels = problem
+        .grounds
+        .iter()
+        .map(|&x| x + problem.water_0)
+        .collect();
+    return Solution::new(levels, &problem.grounds);
 }
 
 #[cfg(test)]
