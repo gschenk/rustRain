@@ -57,6 +57,26 @@ pub fn f64equal(a: f64, b: f64) -> bool {
     return diff < (EPS * norm).max(f64::MIN);
 }
 
+// compare if two vectors Vec<f64> are equal
+pub fn vecf64equal(av: &Vec<f64>, bv: &Vec<f64>) -> bool {
+    // both are empty, as a definition: same
+    if av.is_empty() && bv.is_empty() {
+        return true;
+    }
+
+    // sizes must be equal
+    if av.len() != bv.len() {
+        return false;
+    }
+
+    // each element must be equal
+    return av
+        .iter()
+        .zip(bv.iter())
+        .map(|(&a, &b)| f64equal(a, b))
+        .fold(true, |acc, x| acc && x);
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -170,5 +190,20 @@ mod tests {
         assert_eq!(f64equal(a, b), true);
         assert_ne!(f64equal(a, c), true);
         assert_ne!(f64equal(a, d), true);
+    }
+
+    #[test]
+    fn equal_float_vecs() {
+        let v0: Vec<f64> = vec![];
+        let va = vec![1.0, 1.0, 1.0];
+        let vb = vec![1.0, 1.0];
+        let vc = vec![1.0, 1.1e-23, 4.342e9];
+        let vd = vec![1.0, 0.0, 4.342e9];
+        assert!(vecf64equal(&v0, &v0));
+        assert!(vecf64equal(&va, &va));
+        assert!(vecf64equal(&vc, &vc));
+        assert_eq!(vecf64equal(&v0, &va), false);
+        assert_eq!(vecf64equal(&va, &vb), false);
+        assert_eq!(vecf64equal(&vc, &vd), false);
     }
 }
