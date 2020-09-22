@@ -1,6 +1,7 @@
 use std::env;
 use std::process;
 
+use rain::categorise;
 use rain::input::{Config, Data, Rawinput};
 use rain::Problem;
 
@@ -24,4 +25,5 @@ fn main() {
     let problem = Problem::new(data.duration, &data.profile);
 
     println!("{:?}", problem);
+    println!("{:?}", categorise(problem));
 }

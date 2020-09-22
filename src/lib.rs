@@ -41,6 +41,28 @@ impl Problem {
     }
 }
 
+// categorise problems to deal with trivial and simple problems
+// returns strings as placeholder. Will return function.
+pub fn categorise(problem: Problem) -> &'static str {
+    if f64equal(problem.water_0, 0.0) {
+        return "dry";
+    }
+    // casting to a u64 is harmless here as it is the result of
+    // integer arithmetic
+    if problem.water_tot == problem.saturation_water {
+        return "saturation";
+    }
+    if problem.water_tot > problem.saturation_water {
+        return "above saturation";
+    }
+    if problem.ground_max == problem.ground_min {
+        return "flat ground";
+    }
+
+    // general problem
+    return "general";
+}
+
 // reliably compares if two float numbers are equal
 // https://stackoverflow.com/a/32334103/3842889
 pub fn f64equal(a: f64, b: f64) -> bool {
@@ -55,7 +77,6 @@ pub fn f64equal(a: f64, b: f64) -> bool {
     let norm = (a.abs() + b.abs()).min(f64::MAX);
     return diff < (EPS * norm).max(f64::MIN);
 }
-    
 
 #[cfg(test)]
 mod tests {
