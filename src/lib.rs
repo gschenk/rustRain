@@ -39,6 +39,21 @@ impl Problem {
     }
 }
 
+// reliably compares if two float numbers are equal
+// https://stackoverflow.com/a/32334103/3842889
+pub fn f64equal(a: f64, b: f64) -> bool {
+    const TOLERANCE: u64 = 128;
+    const EPS: f64 = f64::EPSILON * TOLERANCE as f64;
+
+    if a == b {
+        return true;
+    };
+
+    let diff = (a - b).abs();
+    let norm = (a.abs() + b.abs()).min(f64::MAX);
+    return diff < (EPS * norm).max(f64::MIN);
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -141,5 +156,16 @@ mod tests {
             // expect that water saturation and total water are equal
             assert_eq!(problem.saturation_water, problem.water_tot);
         }
+    }
+
+    #[test]
+    fn equal_floats() {
+        let a = 1 as f64;
+        let b = 1.0 + f64::EPSILON;
+        let c = 1.0 + 1e-13; // this value is not equal to a, b
+        let d = 1.0 - 1e-13; // this value is not equal to a, b
+        assert_eq!(f64equal(a, b), true);
+        assert_ne!(f64equal(a, c), true);
+        assert_ne!(f64equal(a, d), true);
     }
 }
