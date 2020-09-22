@@ -2,6 +2,7 @@ use std::env;
 use std::process;
 
 use rain::input::{Config, Data, Rawinput};
+use rain::Problem;
 
 fn main() {
     // get config from comand line arguments
@@ -20,6 +21,7 @@ fn main() {
         process::exit(1);
     });
 
-    println!("{:?}", data.duration);
-    println!("{:?}", data.profile);
+    let problem = Problem::new(data.duration, &data.profile);
+
+    println!("{:?}", problem);
 }
