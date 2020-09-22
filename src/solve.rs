@@ -7,6 +7,7 @@ use super::{f64equal, Problem};
 // which ever is on top
 // water covers is only the amount of water upon the the land
 // water_tot is the overal amount of water, for plausibility checks
+#[derive(Debug)]
 pub struct Solution {
     pub levels: Vec<f64>,
     pub water_covers: Vec<f64>,
@@ -16,7 +17,7 @@ pub struct Solution {
 impl Solution {
     // arguments: levels: a vector of ground/water levels
     // grounds: slice of bare grounds
-    pub fn new(levels: Vec<f64>, grounds: &[f64]) -> Solution {
+    fn new(levels: Vec<f64>, grounds: &[f64]) -> Solution {
         let water_covers: Vec<f64> = levels
             .iter()
             .zip(grounds.iter())
@@ -33,22 +34,29 @@ impl Solution {
 
 // categorise problems to deal with trivial and simple problems
 // returns strings as placeholder. Will return function.
-pub fn categorise(problem: Problem) -> &'static str {
+pub fn select_fn(problem: &Problem) -> Box<dyn Fn(Problem) -> Solution> {
+    // zero days of rain
     if f64equal(problem.water_0, 0.0) {
-        return "dry";
-    }
-    if problem.ground_max == problem.ground_min {
-        return "flat_ground";
-    }
-    if problem.water_tot == problem.saturation_water {
-        return "saturation";
-    }
-    if problem.water_tot > problem.saturation_water {
-        return "above_saturation";
+        return Box::new(|x| dry(x));
     }
 
-    // general problem
-    return "general";
+    // flat world profile
+    if problem.ground_max == problem.ground_min {
+        return Box::new(|x| flat(x));
+    }
+
+    // saturation, water level equal to highest land
+    if problem.water_tot == problem.saturation_water {
+        return Box::new(|x| saturation(x));
+    }
+
+    // land is entirely under water
+    if problem.water_tot > problem.saturation_water {
+        return Box::new(|x| full(x));
+    }
+
+    // todo placeholder funtion 'dry'
+    return Box::new(|x| dry(x));
 }
 
 // all solver functions must have the same signature:
@@ -85,7 +93,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn solutions() {
+    fn solutions_struct() {
         let a_vec: Vec<f64> = vec![3.0, 2.0, 2.0];
         let bs: Vec<f64> = vec![3.0, 1.0, 0.0];
         let expected_1: Vec<f64> = vec![0.0, 1.0, 2.0];

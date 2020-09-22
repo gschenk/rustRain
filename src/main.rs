@@ -2,7 +2,7 @@ use std::env;
 use std::process;
 
 use rain::input::{Config, Data, Rawinput};
-use rain::solve::categorise;
+use rain::solve;
 use rain::Problem;
 
 fn main() {
@@ -25,5 +25,7 @@ fn main() {
     let problem = Problem::new(data.duration, &data.profile);
 
     println!("{:?}", problem);
-    println!("{:?}", categorise(problem));
+
+    let solver = solve::select_fn(&problem);
+    println!("{:?}", solver(problem));
 }
