@@ -55,19 +55,29 @@ pub fn categorise(problem: Problem) -> &'static str {
 // fn f(p: Problem) -> Solution { ... }
 
 // trivial solver for a dry world
-fn dry(problem: Problem) -> Solution {
-    let levels = problem.grounds.clone();
-    return Solution::new(levels, &problem.grounds);
+fn dry(p: Problem) -> Solution {
+    let levels = p.grounds.clone();
+    return Solution::new(levels, &p.grounds);
 }
 
 // trivial solver for a flat world
-fn flat(problem: Problem) -> Solution {
-    let levels = problem
-        .grounds
-        .iter()
-        .map(|&x| x + problem.water_0)
-        .collect();
-    return Solution::new(levels, &problem.grounds);
+fn flat(p: Problem) -> Solution {
+    let levels = p.grounds.iter().map(|&x| x + p.water_0).collect();
+    return Solution::new(levels, &p.grounds);
+}
+
+// saturation() the world is filled up to the level of highest ground
+fn saturation(p: Problem) -> Solution {
+    let levels = vec![p.ground_max as f64; p.grounds.len()];
+    return Solution::new(levels, &p.grounds);
+}
+
+// full: the world is filled above saturation
+fn full(p: Problem) -> Solution {
+    let water_extra = (p.water_tot - p.saturation_water) as f64;
+    let level = p.ground_max as f64 + water_extra / p.groundsize as f64;
+    let levels = vec![level; p.grounds.len()];
+    return Solution::new(levels, &p.grounds);
 }
 
 #[cfg(test)]
