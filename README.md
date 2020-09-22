@@ -31,8 +31,9 @@ Returns water level as list to STDOUT
 
 ### Distribute and Level Algorithm
 - rain all _d_ units of water per segment in one event `l_i = p_i + d`
-- identify watersheds `p_i > p_(i-1)` and `p_i > p_(i+1)` 
-- for a watershed _i_ move _d/2_ units of water to _i-1_
+- identify watersheds `p_i > p_(i-1)` and `p_i > p_(i+1)`,
+  watersheds may be plateaus: `p_(i-1) < p_i = p_(i+1) = ... = p_(i+m) > p_(i+m+1)`.
+- for a watershed _i_ move _m*d/2_ units of water to _i-1_
 - iterate through all segments `i = 0 ... N-1` and run level algorithm right
   starting at `j=i` and incrementing `k = j+1`
 - iterate through all segments `i = N ... 1` and run level algorithm left 
