@@ -41,26 +41,30 @@ impl Problem {
     }
 }
 
-// categorise problems to deal with trivial and simple problems
-// returns strings as placeholder. Will return function.
-pub fn categorise(problem: Problem) -> &'static str {
-    if f64equal(problem.water_0, 0.0) {
-        return "dry";
-    }
-    // casting to a u64 is harmless here as it is the result of
-    // integer arithmetic
-    if problem.water_tot == problem.saturation_water {
-        return "saturation";
-    }
-    if problem.water_tot > problem.saturation_water {
-        return "above saturation";
-    }
-    if problem.ground_max == problem.ground_min {
-        return "flat ground";
-    }
+pub mod solve {
+    use super::{f64equal, Problem};
 
-    // general problem
-    return "general";
+    // categorise problems to deal with trivial and simple problems
+    // returns strings as placeholder. Will return function.
+    pub fn categorise(problem: Problem) -> &'static str {
+        if f64equal(problem.water_0, 0.0) {
+            return "dry";
+        }
+        // casting to a u64 is harmless here as it is the result of
+        // integer arithmetic
+        if problem.water_tot == problem.saturation_water {
+            return "saturation";
+        }
+        if problem.water_tot > problem.saturation_water {
+            return "above_saturation";
+        }
+        if problem.ground_max == problem.ground_min {
+            return "flat_ground";
+        }
+
+        // general problem
+        return "general";
+    }
 }
 
 // reliably compares if two float numbers are equal

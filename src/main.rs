@@ -1,8 +1,8 @@
 use std::env;
 use std::process;
 
-use rain::categorise;
 use rain::input::{Config, Data, Rawinput};
+use rain::solve::categorise;
 use rain::Problem;
 
 fn main() {
