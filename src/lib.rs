@@ -80,6 +80,7 @@ pub fn vecf64equal(av: &Vec<f64>, bv: &Vec<f64>) -> bool {
 #[cfg(test)]
 mod tests {
 
+    use super::solve;
     use super::*;
 
     #[derive(Clone)]
@@ -170,14 +171,40 @@ mod tests {
     }
 
     #[test]
-    fn saturation() {
+    fn solve_simple() {
+        let cases = provide_cases("simple");
+        for case in cases.iter() {
+            let Case(a, b, expected) = case;
+            let problem = Problem::new(*a, &b);
+            let solver = solve::select_fn(&problem);
+            let received = solver(problem).levels;
+
+            assert!(vecf64equal(&received, &expected));
+        }
+    }
+    #[test]
+    fn solve_saturation() {
         let cases = provide_cases("saturation");
         for case in cases.iter() {
-            let Case(a, b, _) = case;
+            let Case(a, b, expected) = case;
             let problem = Problem::new(*a, &b);
+            let solver = solve::select_fn(&problem);
+            let received = solver(problem).levels;
 
-            // expect that water saturation and total water are equal
-            assert_eq!(problem.saturation_water, problem.water_tot);
+            assert!(vecf64equal(&received, &expected));
+        }
+    }
+
+    #[test]
+    fn solve_oversaturation() {
+        let cases = provide_cases("oversaturation");
+        for case in cases.iter() {
+            let Case(a, b, expected) = case;
+            let problem = Problem::new(*a, &b);
+            let solver = solve::select_fn(&problem);
+            let received = solver(problem).levels;
+
+            assert!(vecf64equal(&received, &expected));
         }
     }
 
