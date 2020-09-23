@@ -9,7 +9,7 @@ pub struct Problem {
     pub water_0: f64,      //initial water level on each segment
     pub grounds: Vec<u64>, //ground level
     pub water_tot: u64,    // total amount of water, conserved value!
-    groundsize: u64,
+    groundsize: usize,
     ground_min: u64,
     pub ground_max: u64,
     ground_vol: u64,
@@ -22,14 +22,14 @@ impl Problem {
         let grounds: Vec<u64> = profile.to_vec();
         let ground_min = profile.iter().min().unwrap().clone();
         let ground_max = profile.iter().max().unwrap().clone();
-        let groundsize = grounds.len() as u64;
+        let groundsize = grounds.len();
         let ground_vol = profile.iter().sum();
 
         let water_0 = duration as f64;
-        let water_tot = (water_0 as u64) * groundsize;
+        let water_tot = (water_0 as u64) * groundsize as u64;
 
         // amount of water to fills all wells level with the highest peak
-        let saturation_water = groundsize * ground_max - ground_vol;
+        let saturation_water = groundsize as u64 * ground_max - ground_vol;
 
         Problem {
             water_0,
