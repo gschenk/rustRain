@@ -8,11 +8,11 @@
 // is found and a new saturation level reached.
 
 use super::{Problem, Solution};
-use crate::zero::f64equal;
+use crate::zero;
 
 // Solver Parameters:
 // adaptive step-size constant parameters
-const TOL: f64 = 128f64 * f64::EPSILON; // TODO get this from f64equal after refactor
+const TOL: f64 = zero::EPSILON;
 const MIN_STEP: f64 = TOL / 2.0;
 const MAX_STEP: f64 = 2.0;
 
@@ -89,7 +89,7 @@ where
         println!("i:{}, delta:{}", i, delta);
 
         // the end criterium
-        if f64equal(delta, 0.0) {
+        if zero::f64equal(delta, 0.0) {
             break;
         }
 
