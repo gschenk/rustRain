@@ -8,7 +8,7 @@
 // is found and a new saturation level reached.
 
 use super::{Problem, Solution};
-use crate::f64equal;
+use crate::zero::f64equal;
 
 // Solver Parameters:
 // adaptive step-size constant parameters

@@ -1,6 +1,7 @@
 // module solve provides structures to store results and functions to
 // calculate the equilibrium state of water
-use super::{f64equal, Problem};
+use super::Problem;
+use crate::zero::f64equal;
 mod algorithm;
 
 // Solution stores results
