@@ -1,5 +1,5 @@
 pub mod input;
-pub mod solve;
+pub mod solutions;
 
 // Problem collects data and characterises problem
 #[derive(Debug)]
@@ -80,7 +80,7 @@ pub fn vecf64equal(av: &Vec<f64>, bv: &Vec<f64>) -> bool {
 #[cfg(test)]
 mod tests {
 
-    use super::solve;
+    use super::solutions;
     use super::*;
 
     #[derive(Clone)]
@@ -176,7 +176,7 @@ mod tests {
         for case in cases.iter() {
             let Case(a, b, expected) = case;
             let problem = Problem::new(*a, &b);
-            let solver = solve::select_fn(&problem);
+            let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
             assert!(vecf64equal(&received, &expected));
@@ -188,7 +188,7 @@ mod tests {
         for case in cases.iter() {
             let Case(a, b, expected) = case;
             let problem = Problem::new(*a, &b);
-            let solver = solve::select_fn(&problem);
+            let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
             assert!(vecf64equal(&received, &expected));
@@ -201,7 +201,7 @@ mod tests {
         for case in cases.iter() {
             let Case(a, b, expected) = case;
             let problem = Problem::new(*a, &b);
-            let solver = solve::select_fn(&problem);
+            let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
             assert!(vecf64equal(&received, &expected));

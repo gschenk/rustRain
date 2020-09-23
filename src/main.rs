@@ -2,7 +2,7 @@ use std::env;
 use std::process;
 
 use rain::input::{Config, Data, Rawinput};
-use rain::solve;
+use rain::solutions;
 use rain::Problem;
 
 fn main() {
@@ -26,6 +26,6 @@ fn main() {
 
     println!("{:?}", problem);
 
-    let solver = solve::select_fn(&problem);
+    let solver = solutions::select_fn(&problem);
     println!("{:?}", solver(problem));
 }
