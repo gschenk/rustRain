@@ -2,6 +2,7 @@ pub mod input;
 pub mod solutions;
 pub mod zero;
 pub mod solver;
+pub mod algorithm;
 
 // Problem collects data and characterises problem
 #[derive(Debug)]

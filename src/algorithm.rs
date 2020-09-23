@@ -7,8 +7,8 @@
 // problem is divided in sub problems.  For each subproblem a new highest peak
 // is found and a new saturation level reached.
 
-use super::{Problem, Solution};
-use crate::solver;
+use crate::{solver, Problem};
+use crate::solutions::Solution;
 
 // levelling_equation
 fn levelling_equation(x: f64, water: f64, grounds: &[u64]) -> f64 {

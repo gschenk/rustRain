@@ -2,7 +2,7 @@
 // calculate the equilibrium state of water
 use super::Problem;
 use crate::zero::f64equal;
-mod algorithm;
+use crate::algorithm;
 
 // Solution stores results
 // levels are the overal levels of water or dry land per segment,
@@ -19,7 +19,7 @@ pub struct Solution {
 impl Solution {
     // arguments: levels: a vector of ground/water levels
     // grounds: slice of bare grounds
-    fn new(levels: Vec<f64>, grounds: &[u64]) -> Solution {
+    pub fn new(levels: Vec<f64>, grounds: &[u64]) -> Solution {
         let water_covers: Vec<f64> = levels
             .iter()
             .zip(grounds.iter())
