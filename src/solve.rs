@@ -1,6 +1,7 @@
 // module solve provides structures to store results and functions to
 // calculate the equilibrium state of water
 use super::{f64equal, Problem};
+mod algorithm;
 
 // Solution stores results
 // levels are the overal levels of water or dry land per segment,
@@ -17,11 +18,11 @@ pub struct Solution {
 impl Solution {
     // arguments: levels: a vector of ground/water levels
     // grounds: slice of bare grounds
-    fn new(levels: Vec<f64>, grounds: &[f64]) -> Solution {
+    fn new(levels: Vec<f64>, grounds: &[u64]) -> Solution {
         let water_covers: Vec<f64> = levels
             .iter()
             .zip(grounds.iter())
-            .map(|(&a, &b)| a - b)
+            .map(|(&a, &b)| a - b as f64)
             .collect();
         let water_tot = water_covers.iter().sum();
         Solution {
@@ -55,8 +56,8 @@ pub fn select_fn(problem: &Problem) -> Box<dyn Fn(Problem) -> Solution> {
         return Box::new(|x| full(x));
     }
 
-    // todo placeholder funtion 'dry'
-    return Box::new(|x| dry(x));
+    // function for general case
+    return Box::new(|x| algorithm::raise(x));
 }
 
 // all solver functions must have the same signature:
@@ -64,13 +65,13 @@ pub fn select_fn(problem: &Problem) -> Box<dyn Fn(Problem) -> Solution> {
 
 // trivial solver for a dry world
 fn dry(p: Problem) -> Solution {
-    let levels = p.grounds.clone();
+    let levels = p.grounds.iter().map(|x| *x as f64).collect();
     return Solution::new(levels, &p.grounds);
 }
 
 // trivial solver for a flat world
 fn flat(p: Problem) -> Solution {
-    let levels = p.grounds.iter().map(|&x| x + p.water_0).collect();
+    let levels = p.grounds.iter().map(|&x| x as f64 + p.water_0).collect();
     return Solution::new(levels, &p.grounds);
 }
 
@@ -95,7 +96,7 @@ mod tests {
     #[test]
     fn solutions_struct() {
         let a_vec: Vec<f64> = vec![3.0, 2.0, 2.0];
-        let bs: Vec<f64> = vec![3.0, 1.0, 0.0];
+        let bs: Vec<u64> = vec![3, 1, 0];
         let expected_1: Vec<f64> = vec![0.0, 1.0, 2.0];
         let expected_2: f64 = 3.0;
         let received = Solution::new(a_vec, &bs);

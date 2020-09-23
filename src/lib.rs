@@ -5,7 +5,7 @@ pub mod solve;
 #[derive(Debug)]
 pub struct Problem {
     pub water_0: f64,      //initial water level on each segment
-    pub grounds: Vec<f64>, //ground level
+    pub grounds: Vec<u64>, //ground level
     pub water_tot: u64,    // total amount of water, conserved value!
     groundsize: u64,
     ground_min: u64,
@@ -17,7 +17,7 @@ pub struct Problem {
 impl Problem {
     pub fn new(duration: u64, profile: &[u64]) -> Problem {
         // convert ground and get some properties
-        let grounds: Vec<f64> = profile.iter().map(|x| *x as f64).rev().collect();
+        let grounds: Vec<u64> = profile.to_vec();
         let ground_min = profile.iter().min().unwrap().clone();
         let ground_max = profile.iter().max().unwrap().clone();
         let groundsize = grounds.len() as u64;
