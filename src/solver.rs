@@ -5,15 +5,18 @@ use crate::zero;
 // Solver Parameters:
 // adaptive step-size constant parameters
 const TOL: f64 = zero::EPSILON;
-const MIN_STEP: f64 = TOL / 2.0;
+const MIN_STEP: f64 = TOL / 4.0;
 const MAX_STEP: f64 = 2.0;
 
 // keep this number low, if the solver cannot finish in about 100
 // iterations more wont do good. Instead take a proper ODE solver.
-const MAX_ITERATIONS: usize = 300;
+const MAX_ITERATIONS: usize = 30;
 
 // Assymetric step size for lowering/raising to avoid wobble around zero
 const ASSY_FACTOR: f64 = 0.9;
+
+// Toggle to let solver fail quietly and return value instead of panicing
+const QUIET: bool = false;
 
 // step_size returns the size of the next step
 fn step_size(delta: f64) -> f64 {
@@ -34,17 +37,20 @@ where
     let mut x = x0;
 
     for i in 0..MAX_ITERATIONS {
+
         let delta: f64 = f(x);
 
-        // adaptive step size, equals error, with boundaries
-        println!("i:{}, delta:{}", i, delta);
-
-        // the end criterium
-        if zero::f64equal(delta, 0.0) {
+        // finish criterium
+        if delta.abs() < TOL {
             break;
         }
 
-        // approach zero from either side
+        // panic when we are running out of iterations!
+        if !QUIET && i+1 >= MAX_ITERATIONS {
+            panic!("Solver reached max iterations: {}, delta: {}", MAX_ITERATIONS, delta)
+        }
+
+        // approach zero from either side and make a step
         if delta < 0.0 {
             x += step_size(delta);
             continue;
