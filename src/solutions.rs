@@ -1,8 +1,8 @@
 // module solve provides structures to store results and functions to
 // calculate the equilibrium state of water
 use super::Problem;
-use crate::zero::f64equal;
 use crate::algorithm;
+use crate::zero::f64equal;
 
 // Solution stores results
 // levels are the overal levels of water or dry land per segment,

@@ -1,8 +1,8 @@
+pub mod algorithm;
 pub mod input;
 pub mod solutions;
-pub mod zero;
 pub mod solver;
-pub mod algorithm;
+pub mod zero;
 
 // Problem collects data and characterises problem
 #[derive(Debug)]
@@ -50,9 +50,9 @@ mod tests {
 
     use super::solutions;
     use super::*;
-    use crate::zero::vecf64equal;
+    use crate::zero::vecf64similar;
 
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     struct Case(u64, Vec<u64>, Vec<f64>);
 
     // simple test cases, pen-and-paper results
@@ -61,12 +61,12 @@ mod tests {
             Case(
                 0,
                 vec![5, 5, 0, 0, 0, 0, 5, 5],
-                vec![5.0, 5.0, 3.0, 3.0, 3.0, 3.0, 5.0, 5.0],
+                vec![5.0, 5.0, 0.0, 0.0, 0.0, 0.0, 5.0, 5.0],
             ),
             Case(
                 1,
                 vec![5, 5, 0, 0, 0, 0, 5, 5],
-                vec![5.0, 5.0, 3.0, 3.0, 3.0, 3.0, 5.0, 5.0],
+                vec![5.0, 5.0, 2.0, 2.0, 2.0, 2.0, 5.0, 5.0],
             ),
             Case(
                 2,
@@ -95,11 +95,11 @@ mod tests {
             ),
             Case(
                 1,
-                vec![0, 0, 0, 4, 3, 5],
+                vec![0, 0, 0, 3, 4, 5],
                 vec![2.0, 2.0, 2.0, 3.0, 4.0, 5.0],
             ),
-            Case(2, vec![7, 6, 5, 0, 0], vec![7.0, 6.0, 5.5, 5.5, 5.5]),
-            Case(2, vec![0, 0, 5, 6, 7], vec![5.5, 5.5, 5.5, 6.0, 7.0]),
+            Case(2, vec![7, 6, 5, 0, 0], vec![7.0, 6.0, 5.0, 5.0, 5.0]),
+            Case(2, vec![0, 0, 5, 6, 7], vec![5.0, 5.0, 5.0, 6.0, 7.0]),
         ];
         let watersheds = vec![
             Case(1, vec![0, 3, 0], vec![1.5, 3.0, 1.5]),
@@ -109,6 +109,7 @@ mod tests {
                 vec![6, 0, 4, 4, 0, 6],
                 vec![6.0, 3.0, 4.0, 4.0, 3.0, 6.0],
             ),
+            // this test fails spectacularly!
             Case(
                 2,
                 vec![0, 5, 0, 5, 0, 5, 0],
@@ -123,6 +124,9 @@ mod tests {
             ),
             Case(1, vec![0, 3, 4, 3, 0], vec![2.5, 3.0, 3.0, 2.5]),
         ];
+        if token == "simple" {
+            return saturation;
+        }
         if token == "saturation" {
             return saturation;
         }
@@ -148,7 +152,7 @@ mod tests {
             let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
-            assert!(vecf64equal(&received, &expected));
+            assert!(vecf64similar(&received, &expected));
         }
     }
     #[test]
@@ -160,7 +164,7 @@ mod tests {
             let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
-            assert!(vecf64equal(&received, &expected));
+            assert!(vecf64similar(&received, &expected));
         }
     }
 
@@ -173,7 +177,23 @@ mod tests {
             let solver = solutions::select_fn(&problem);
             let received = solver(problem).levels;
 
-            assert!(vecf64equal(&received, &expected));
+            assert!(vecf64similar(&received, &expected));
+        }
+    }
+    #[test]
+    fn solve_all() {
+        let cases = provide_cases("all");
+        //assert!(false);
+        for case in cases.iter() {
+            let Case(a, b, expected) = case;
+            let problem = Problem::new(*a, &b);
+            let solver = solutions::select_fn(&problem);
+            println!("P{:?}", &problem);
+            println!("E{:?}", &expected);
+            let received = solver(problem).levels;
+
+            println!("R {:?}", &received);
+            assert!(vecf64similar(&received, &expected));
         }
     }
 }

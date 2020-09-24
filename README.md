@@ -29,6 +29,32 @@ Returns water level as list to STDOUT
 - level profile `p_i = p_j` for all `i, j < N`
 
 
+### Raise Land Algorithm
+- start with water level `l_i = d` for all _i_
+- (fn 1) identify rightmost highest peak(s) with height `r_max`
+- raise land until highest point `r_max = d` thus `r_i = p_i - p_max + d` 
+- increase water level by water displacement `l = d + sum(r_i)/N` where
+  `l_i = l` for all `i`
+- incrementally increase water level with adaptive step size until
+  `l - r_max <= EPSILON` (that's a real first watershed moment)
+- distribute water between segments left, and right of the peak. For sufficiently
+ raised sub-ranges the maximum amount of water that can be taken is determined
+ by water displacement of sub-surface land. If land is not fully raised
+ distribute by area. **This does not work right in certain cases**
+- for `m` peaks with height `r_i = l_i` we get `m+1` independent problems.
+  Recursion of (fn 1)
+- return from (fn 1) when no peaks are left, fully raise all segments in sub
+  problem `r_i = p_i`
+
+
+#### Notes
+Advantage of this algorithm is that no water is distributed and the problem of
+re-distributing water onto a set of segments where water levels are already in
+equilibrium will not occur.
+
+Recursion depth is also limited by the largest possible number of peaks and one
+`(ceiling(N/2) - 1) + 1`.
+
 ### Distribute and Level Algorithm
 - rain all _d_ units of water per segment in one event `l_i = p_i + d`
 - identify watersheds `p_i > p_(i-1)` and `p_i > p_(i+1)`,
@@ -70,29 +96,14 @@ Since this only goes down into wells that are right of the previous segment
 the previous step has to be run in reverse.
 
 Watersheds are dealt with by pushing half of their water to the left before
-starting the level function calls.
+starting the level function calls. !! this does not work !!
 
 There are fringe cases at the boundaries conceivable where the left iteration
 leaves water levels that are higher than the respective boundary walls. Another
 pass of the right algorithm is necessary in that case.
 
-### Raise Land Algorithm
-- start with water level `l_i = d` for all _i_
-- (fn 1) identify highest peak(s) with height `r_max`
-- raise land until highest point `r_max = d` thus `r_i = p_i - p_max + d` 
-- increase water level by water displacement `l = d + sum(r_i)/N` where
-  `l_i = l` for all `i`
-- incrementally increase water level with adaptive step size until
-  `l - r_max <= EPSILON` (that's a real first watershed moment)
-- for `m` peaks with height `r_i = l_i` we get `m+1` independent problems.
-  Recursion of (fn 1)
-- return from (fn 1) when no peaks are left, fully raise all segments in sub
-  problem `r_i = p_i`
+#### What breaks this Algorithm:
+Watersheds may be peaks, plateaus, but also small wells between Plateaus.
+Think of [0, 0, 0, 6, 5, 4, 6, 0, 0, 0]. It is difficult to determine when such
+high well fills up. Especially when dealing with fractional water reaching it.
 
-#### Notes
-Advantage of this algorithm is that no water is distributed and the problem of
-re-distributing water onto a set of segments where water levels are already in
-equilibrium will not occur.
-
-Recursion depth is also limited by the largest possible number of peaks and one
-`(ceiling(N/2) - 1) + 1`.
