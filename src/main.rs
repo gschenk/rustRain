@@ -24,8 +24,9 @@ fn main() {
 
     let problem = Problem::new(data.duration, &data.profile);
 
-    println!("{:?}", problem);
+    //println!("{:?}", problem);
 
     let solver = solutions::select_fn(&problem);
-    println!("{:?}", solver(problem));
+    println!("Resulting water and ground levels:");
+    println!("{:?}", solver(problem).levels);
 }
