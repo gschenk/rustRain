@@ -22,11 +22,13 @@ fn main() {
         process::exit(1);
     });
 
+    // pre-process data and get struct describing problem
     let problem = Problem::new(data.duration, &data.profile);
 
-    //println!("{:?}", problem);
-
+    // this provides the adequate function to solve a given problem
     let solver = solutions::select_fn(&problem);
+
+    // calculate results and print them
     println!("Resulting water and ground levels:");
     println!("{:?}", solver(problem).levels);
 }

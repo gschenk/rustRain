@@ -17,6 +17,7 @@ pub struct Problem {
     saturation_water: u64,
 }
 
+// Problem implementation processes input data and gets charactistics of it
 impl Problem {
     pub fn new(duration: u64, profile: &[u64]) -> Problem {
         // convert ground and get some properties
@@ -75,19 +76,21 @@ mod tests {
             ),
         ];
         let saturation = vec![
+            // at saturation
             Case(1, vec![2, 0, 0, 2], vec![2.0, 2.0, 2.0, 2.0]),
             Case(
                 2,
                 vec![4, 4, 0, 0, 0, 0, 4, 4],
                 vec![4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0, 4.0],
             ),
+            // above saturation
+            Case(
+                3,
+                vec![5, 5, 0, 0, 0, 0, 5, 5],
+                vec![5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5],
+            ),
         ];
-        let oversaturation = vec![Case(
-            3,
-            vec![5, 5, 0, 0, 0, 0, 5, 5],
-            vec![5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5, 5.5],
-        )];
-        let symmetry = vec![
+        let general = vec![
             Case(
                 1,
                 vec![5, 4, 3, 0, 0, 0],
@@ -100,6 +103,16 @@ mod tests {
             ),
             Case(2, vec![7, 6, 5, 0, 0], vec![7.0, 6.0, 5.0, 5.0, 5.0]),
             Case(2, vec![0, 0, 5, 6, 7], vec![5.0, 5.0, 5.0, 6.0, 7.0]),
+            Case(
+                1,
+                vec![3, 1, 6, 4, 8, 9],
+                vec![4.0, 4.0, 6.0, 6.0, 8.0, 9.0],
+            ),
+            Case(
+                2,
+                vec![3, 1, 6, 4, 8, 9],
+                vec![6.5, 6.5, 6.5, 6.5, 8.0, 9.0],
+            ),
         ];
         let watersheds = vec![
             Case(1, vec![0, 3, 0], vec![1.5, 3.0, 1.5]),
@@ -114,6 +127,11 @@ mod tests {
         // these tests fail spectacularly!
         let known_bugs = vec![
             Case(
+                1,
+                vec![0, 0, 3, 2, 3, 1, 1],
+                vec![1.5, 1.5, 3.0, 3.0, 3.0, 1.5, 1.5],
+            ),
+            Case(
                 2,
                 vec![0, 5, 0, 5, 0, 5, 0],
                 vec![3.0, 5.0, 4.0, 5.0, 4.0, 5.0, 3.0],
@@ -127,7 +145,7 @@ mod tests {
             ),
         ];
         if token == "simple" {
-            return saturation;
+            return simple;
         }
         if token == "saturation" {
             return saturation;
@@ -136,14 +154,7 @@ mod tests {
             return known_bugs;
         }
         if token == "all" {
-            return [
-                simple.as_slice(),
-                saturation.as_slice(),
-                oversaturation.as_slice(),
-                symmetry.as_slice(),
-                watersheds.as_slice(),
-            ]
-            .concat();
+            return [general.as_slice(), watersheds.as_slice()].concat();
         }
         return vec![];
     }

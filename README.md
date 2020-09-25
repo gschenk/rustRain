@@ -3,11 +3,36 @@ Fills a 1-d landscape with discrete height function with water.
 
 One unit of water is added to each segment per time step.
 
-Expects two input parameters
-Duration _d_: positiv integer
-Profile _P_: List of N+1 positive integers
 
-Returns water level as list to STDOUT
+## Useage
+> cargo run [myinput.toml]
+
+The input file must have two fields:
+duration _d_: positiv integer
+profile _P_: List of N+1 positive integers
+
+Example:
+    duration = 1
+    profile = [0, 1, 2, 3]
+
+The program returns a list of final levels of water and land to STDOUT.
+
+
+## Known Issues
+- For a certain class of problems water is distributed incorrectly.
+  A blunt way to fix this is to run the same problem in reverse and
+  average results.
+
+- There is no proper solver to minimize the levelling function implemented.
+  The present one is just a placeholder for prototyping the algorithm.
+
+- The levelling function has bad properties and leads to stiff problem. In
+  particular the discontinuity at `x > 0` has to be fixed to allow eg golden
+  section method solver. Such a solver will be tolerant to stiffness due to
+  inherent discontinuity of the function.
+
+- Data structures are often not passed in a good way. This leaves room for
+  optimisations.
 
 ## definitions
 - `P = p_0, ..., p_i, ..., p_N`
@@ -29,7 +54,7 @@ Returns water level as list to STDOUT
 - level profile `p_i = p_j` for all `i, j < N`
 
 
-### Raise Land Algorithm
+### Raise Land Algorithm (chosen algorithm)
 - start with water level `l_i = d` for all _i_
 - (fn 1) identify rightmost highest peak(s) with height `r_max`
 - raise land until highest point `r_max = d` thus `r_i = p_i - p_max + d` 
@@ -55,7 +80,7 @@ equilibrium will not occur.
 Recursion depth is also limited by the largest possible number of peaks and one
 `(ceiling(N/2) - 1) + 1`.
 
-### Distribute and Level Algorithm
+### Distribute and Level Algorithm (not chosen)
 - rain all _d_ units of water per segment in one event `l_i = p_i + d`
 - identify watersheds `p_i > p_(i-1)` and `p_i > p_(i+1)`,
   watersheds may be plateaus: `p_(i-1) < p_i = p_(i+1) = ... = p_(i+m) > p_(i+m+1)`.
