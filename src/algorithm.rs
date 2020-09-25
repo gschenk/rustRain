@@ -232,8 +232,35 @@ fn water_distribution(
     let right_range: f64 = left_corr - right_corr + 0.5 + right_grounds.len() as f64;
 
     let f_rain = |r| r * water / (left_range + right_range);
-    let left = f_rain(left_range);
-    let right = f_rain(right_range);
+    let left_rain = f_rain(left_range);
+    let right_rain = f_rain(right_range);
+
+    // check if well has enough space to hold water
+    let f_well_volume = |gs: &[u64]| -> f64 {
+        let volume = peak_heigth as f64 * gs.len() as f64;
+        let land: f64 = gs.iter().map(|g| *g as f64).sum();
+        return volume - land;
+    };
+    let left_well_volume = f_well_volume(left_grounds);
+    let right_well_volume = f_well_volume(right_grounds);
+
+    // if either side has not enough space to hold rain, distribute excees to the other side
+    let mut left = left_rain;
+    let mut right = right_rain;
+    if left_rain > left_well_volume {
+        left = left_well_volume;
+        right = water - left;
+    }
+    if right_rain > right_well_volume {
+        right = right_well_volume;
+        left = water - right;
+    }
+    if (right_well_volume + left_well_volume) < water {
+        panic!(
+            "water doesnt fit into wells: {} {} {}",
+            water, right_well_volume, left_well_volume
+        )
+    }
 
     return WaterDistribution { left, right };
 }
