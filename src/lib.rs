@@ -113,6 +113,17 @@ mod tests {
                 vec![3, 1, 6, 4, 8, 9],
                 vec![6.5, 6.5, 6.5, 6.5, 8.0, 9.0],
             ),
+            Case(1, vec![1, 8, 8, 8, 1], vec![3.5, 8.0, 8.0, 8.0, 3.5]),
+            Case(
+                1,
+                vec![1, 2, 3, 4, 5, 6, 7, 8, 9],
+                vec![4.75, 4.75, 4.75, 4.75, 5.0, 6.0, 7.0, 8.0, 9.0],
+            ),
+            Case(
+                1,
+                vec![3, 1, 6, 4, 8, 9],
+                vec![4.0, 4.0, 6.0, 6.0, 8.0, 9.0],
+            ),
         ];
         let watersheds = vec![
             Case(1, vec![0, 3, 0], vec![1.5, 3.0, 1.5]),
@@ -143,7 +154,9 @@ mod tests {
                     3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0,
                 ],
             ),
+            //profile = [  8,1,8,8,1 ] fail
         ];
+
         if token == "simple" {
             return simple;
         }
@@ -159,6 +172,20 @@ mod tests {
         return vec![];
     }
 
+    #[test]
+    fn water_conservation() {
+        //tests amount of water before and after are equal
+        let cases = provide_cases("simple");
+        for case in cases.iter() {
+            let Case(a, b, _) = case;
+            let problem = Problem::new(*a, &b);
+            let solver = solutions::select_fn(&problem);
+            let received = solver(problem).water_tot;
+            let expected: f64 = *a as f64 * b.len() as f64;
+
+            assert!( (received - expected).abs() < 1e-12);
+        }
+    }
     #[test]
     fn solve_simple() {
         let cases = provide_cases("simple");
