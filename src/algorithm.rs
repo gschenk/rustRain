@@ -226,10 +226,10 @@ fn water_distribution(
     // correct for right boundaries
     let left_corr: f64 = if at_left_edge { 0.5 } else { 0.0 };
     let right_corr: f64 = if at_right_edge { 0.5 } else { 0.0 };
-    // one half is added to ranges to distribute water from the peak segment that is missing
-    // here
-    let left_range: f64 = right_corr - left_corr + 0.5 + left_grounds.len() as f64;
-    let right_range: f64 = left_corr - right_corr + 0.5 + right_grounds.len() as f64;
+    // one unit is added to both ranges to distribute water that ran off segment
+    // that are missing here. 
+    let left_range: f64 = 1.0 - left_corr +  left_grounds.len() as f64;
+    let right_range: f64 = 1.0 - right_corr  + right_grounds.len() as f64;
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left_rain = f_rain(left_range);
