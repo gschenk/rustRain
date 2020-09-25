@@ -109,11 +109,14 @@ mod tests {
                 vec![6, 0, 4, 4, 0, 6],
                 vec![6.0, 3.0, 4.0, 4.0, 3.0, 6.0],
             ),
-            // this test fails spectacularly!
+            Case(1, vec![0, 3, 4, 3, 0], vec![2.5, 3.0, 4.0, 3.0, 2.5]),
+        ];
+        // these tests fail spectacularly!
+        let known_bugs = vec![
             Case(
                 2,
                 vec![0, 5, 0, 5, 0, 5, 0],
-                vec![3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0],
+                vec![3.0, 5.0, 4.0, 5.0, 4.0, 5.0, 3.0],
             ),
             Case(
                 2,
@@ -122,13 +125,15 @@ mod tests {
                     3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0, 5.0, 3.0,
                 ],
             ),
-            Case(1, vec![0, 3, 4, 3, 0], vec![2.5, 3.0, 3.0, 2.5]),
         ];
         if token == "simple" {
             return saturation;
         }
         if token == "saturation" {
             return saturation;
+        }
+        if token == "known_bugs" {
+            return known_bugs;
         }
         if token == "all" {
             return [

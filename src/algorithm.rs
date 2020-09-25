@@ -169,6 +169,8 @@ fn water_distribution(
     left_grounds: &[u64],
     right_grounds: &[u64],
     lift: f64,
+    at_left_edge: bool,
+    at_right_edge: bool,
 ) -> WaterDistribution {
     //trivial cases
     if !has_left {
@@ -221,10 +223,13 @@ fn water_distribution(
     // if both ranges have parts that are still submerged displacment is not limiting water
     // uptake. Water is distributed by ranges only, that represents the area it rains upon.
 
+    // correct for right boundaries
+    let left_corr: f64 = if at_left_edge { 0.5 } else { 0.0 };
+    let right_corr: f64 = if at_right_edge { 0.5 } else { 0.0 };
     // one half is added to ranges to distribute water from the peak segment that is missing
     // here
-    let left_range: f64 = 0.5 + left_grounds.len() as f64;
-    let right_range: f64 = 0.5 + right_grounds.len() as f64;
+    let left_range: f64 = right_corr - left_corr + 0.5 + left_grounds.len() as f64;
+    let right_range: f64 = left_corr - right_corr + 0.5 + right_grounds.len() as f64;
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left = f_rain(left_range);
@@ -299,6 +304,10 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         &[]
     };
 
+    // determine if the present range is ajacent to the right edge
+    let at_left_edge: bool = start == 0;
+    let at_right_edge: bool = end == collector.segments.len() - 1;
+
     let WaterDistribution {
         left: water_left,
         right: water_right,
@@ -310,6 +319,8 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         &grounds_left,
         &grounds_right,
         lift,
+        at_left_edge,
+        at_right_edge,
     );
 
     // check if there is world left left of the present peak
