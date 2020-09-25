@@ -26,6 +26,12 @@ pub fn f64equal(a: f64, b: f64) -> bool {
     return equal(a, b, EPSILON, RELTH);
 }
 
+// reliably compares if two float numbers are equal
+// https://stackoverflow.com/a/32334103/3842889
+pub fn f64similar(a: f64, b: f64) -> bool {
+    return equal(a, b, TOL * EPSILON, TOL * RELTH);
+}
+
 // compare if two vectors Vec<f64> are equal
 fn vectors(av: &Vec<f64>, bv: &Vec<f64>, epsilon: f64, relth: f64) -> bool {
     // both are empty, as a definition: same

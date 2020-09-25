@@ -51,7 +51,7 @@ mod tests {
 
     use super::solutions;
     use super::*;
-    use crate::zero::vecf64similar;
+    use crate::zero::{f64similar, vecf64similar};
 
     #[derive(Clone, Debug)]
     struct Case(u64, Vec<u64>, Vec<f64>);
@@ -183,7 +183,7 @@ mod tests {
             let received = solver(problem).water_tot;
             let expected: f64 = *a as f64 * b.len() as f64;
 
-            assert!( (received - expected).abs() < 1e-12);
+            assert!(f64similar(received, expected));
         }
     }
     #[test]
