@@ -14,6 +14,9 @@ use std::iter::successors;
 
 const NTOL: f64 = -16.0 * zero::EPSILON; // this tolerance must be larger as the solver's
 
+// toggles a hackish fix to water distribution, warning doubles effort!
+const SYMMETRY_HACK: bool = true;
+
 // levelling_equation
 // when this equation returns zero, the highest peak and water level are equal
 // its first argument x is a value by which the ground is shifted
@@ -149,6 +152,23 @@ pub fn raise(p: Problem) -> Solution {
 
     let levels: Vec<f64> = segments.iter().map(|s| s.level - s.lift).collect();
 
+    if SYMMETRY_HACK {
+        // calculate the water levels in reverse, starting left going right
+        // then average results of both calculations
+        let rev_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0);
+        let rev_grounds: Vec<u64> = p.grounds.clone().iter().rev().map(|a| *a).collect();
+        let rev_coll0 = Collector::new(p.groundsize);
+        let rev_collector = recursor(rev_pars, &rev_grounds, rev_coll0);
+        let average_levels: Vec<f64> = rev_collector
+            .segments
+            .iter()
+            .rev()
+            .map(|s| s.level - s.lift)
+            .zip(levels)
+            .map( |(a, b)| (a + b)/2.0 )
+            .collect();
+        return Solution::new(average_levels, &p.grounds);
+    }
     return Solution::new(levels, &p.grounds);
 }
 
@@ -227,9 +247,9 @@ fn water_distribution(
     let left_corr: f64 = if at_left_edge { 0.5 } else { 0.0 };
     let right_corr: f64 = if at_right_edge { 0.5 } else { 0.0 };
     // one unit is added to both ranges to distribute water that ran off segment
-    // that are missing here. 
-    let left_range: f64 = 1.0 - left_corr +  left_grounds.len() as f64;
-    let right_range: f64 = 1.0 - right_corr  + right_grounds.len() as f64;
+    // that are missing here.
+    let left_range: f64 = 1.0 - left_corr + left_grounds.len() as f64;
+    let right_range: f64 = 1.0 - right_corr + right_grounds.len() as f64;
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left_rain = f_rain(left_range);

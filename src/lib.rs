@@ -146,15 +146,19 @@ mod tests {
                 vec![6.0, 3.0, 4.0, 4.0, 3.0, 6.0],
             ),
             Case(1, vec![0, 3, 4, 3, 0], vec![2.5, 3.0, 4.0, 3.0, 2.5]),
-        ];
-        // these tests fail spectacularly!
-        let known_bugs = vec![
             Case(
                 1,
                 vec![0, 0, 3, 2, 3, 1, 1],
                 vec![1.5, 1.5, 3.0, 3.0, 3.0, 2.5, 2.5],
             ),
-            //profile = [  8,1,8,8,1 ] fail
+        ];
+        // these tests fail spectacularly!
+        let known_bugs = vec![
+            Case(
+                1,
+            vec![  8,1,8,8,1 ],
+            vec![ 8.0, 4.0, 8.0, 8.0, 3.0 ],
+                )
         ];
 
         if token == "simple" {
@@ -225,7 +229,7 @@ mod tests {
     }
     #[test]
     fn solve_all() {
-        let cases = provide_cases("general");
+        let cases = provide_cases("all");
         //assert!(false);
         for case in cases.iter() {
             let Case(a, b, expected) = case;
