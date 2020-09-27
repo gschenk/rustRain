@@ -19,10 +19,6 @@ The program returns a list of final levels of water and land to STDOUT.
 
 
 ## Known Issues
-- For a certain class of problems water is distributed incorrectly.
-  A blunt way to fix this is to run the same problem in reverse and
-  average results.
-
 - There is no proper solver to minimize the levelling function implemented.
   The present one is just a placeholder for prototyping the algorithm.
 

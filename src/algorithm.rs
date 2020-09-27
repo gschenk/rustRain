@@ -245,7 +245,6 @@ fn water_distribution(
     } else {
         f_dist_range(right_grounds)
     };
-    println!("right peak: {}", right_edge_peaks);
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left_rain = f_rain(left_range);
