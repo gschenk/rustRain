@@ -122,16 +122,28 @@ struct RecursorPars {
     water: f64,
     start: usize,
     end: usize,
+    left_edge_peaks: usize,
+    right_edge_peaks: usize,
     nest: u64,
 }
 
 impl RecursorPars {
-    fn new(lift: f64, water: f64, start: usize, end: usize, nest: u64) -> Self {
+    fn new(
+        lift: f64,
+        water: f64,
+        start: usize,
+        end: usize,
+        left_edge_peaks: usize,
+        right_edge_peaks: usize,
+        nest: u64,
+    ) -> Self {
         return Self {
             lift,
             water,
             start,
             end,
+            left_edge_peaks,
+            right_edge_peaks,
             nest,
         };
     }
@@ -145,7 +157,7 @@ pub fn raise(p: Problem) -> Solution {
     // initialize collector
     let collector0 = Collector::new(p.groundsize);
 
-    let recursor_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0);
+    let recursor_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
     let collector = recursor(recursor_pars, &p.grounds, collector0);
 
     let Collector { segments } = collector;
@@ -155,7 +167,7 @@ pub fn raise(p: Problem) -> Solution {
     if SYMMETRY_HACK {
         // calculate the water levels in reverse, starting left going right
         // then average results of both calculations
-        let rev_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0);
+        let rev_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
         let rev_grounds: Vec<u64> = p.grounds.clone().iter().rev().map(|a| *a).collect();
         let rev_coll0 = Collector::new(p.groundsize);
         let rev_collector = recursor(rev_pars, &rev_grounds, rev_coll0);
@@ -165,7 +177,7 @@ pub fn raise(p: Problem) -> Solution {
             .rev()
             .map(|s| s.level - s.lift)
             .zip(levels)
-            .map( |(a, b)| (a + b)/2.0 )
+            .map(|(a, b)| (a + b) / 2.0)
             .collect();
         return Solution::new(average_levels, &p.grounds);
     }
@@ -192,6 +204,8 @@ fn water_distribution(
     lift: f64,
     at_left_edge: bool,
     at_right_edge: bool,
+    left_edge_peaks: usize,
+    right_edge_peaks: usize,
 ) -> WaterDistribution {
     //trivial cases
     if !has_left {
@@ -245,20 +259,19 @@ fn water_distribution(
     // uptake. Water is distributed by ranges only, that represents the area it rains upon.
 
     // distribute water from peaks evenly to either side
-    let mut left_range = peak_width/2.0  + left_grounds.len() as f64;
-    let mut right_range = peak_width/2.0 + right_grounds.len() as f64;
+    let mut left_range = peak_width / 2.0 + left_grounds.len() as f64;
+    let mut right_range = peak_width / 2.0 + right_grounds.len() as f64;
 
-    // correct for boundary effects
-    if at_left_edge && at_right_edge {
-    } else if at_left_edge {
-        right_range += 0.5;
-    } else if at_right_edge {
-        left_range += 0.5;
-    } else {
-        left_range += 0.5;
-        right_range += 0.5;
+    // correct for boundary effects:
+    // (The problem has impermeable boundaries. When these are next to the ranges considered
+    // here they behave differently than other tiles.)
+    if !at_right_edge {
+        right_range += 0.5f64.max(right_edge_peaks as f64);
     }
-
+    if !at_left_edge {
+        left_range += 0.5f64.max(left_edge_peaks as f64);
+    }
+    println!("right peak: {}", right_edge_peaks);
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left_rain = f_rain(left_range);
@@ -301,6 +314,8 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         water,
         start,
         end,
+        left_edge_peaks,
+        right_edge_peaks,
         nest,
     } = pars;
 
@@ -335,15 +350,30 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
     let i_peak: usize = grounds.iter().position(|x| x == peak_heigth).unwrap();
     let absolute_peak = i_peak + start; // absoulte position of peak in collector vector
 
-    // check if peak is at extremes of our range
-    let has_left = i_peak != 0;
-    let has_right = i_peak != grounds.len();
-
     // see if adjacent segments right of the present one are at the same level
     let n_adjacent_peaks = grounds[i_peak..]
         .iter()
         .take_while(|g| g == &peak_heigth)
         .count();
+
+    // check if peak is at extremes of our range
+    let has_left = i_peak != 0;
+
+    // consider adjacent peaks for the right one
+    let has_right = i_peak + n_adjacent_peaks != grounds.len();
+
+    // peaks at the left boundary are a special condition for water distribution
+    // one recursion level down
+    let new_left_edge_peaks = if !has_left && n_adjacent_peaks > 0 {
+        n_adjacent_peaks
+    } else {
+        0
+    };
+    let new_right_edge_peaks = if !has_right && n_adjacent_peaks > 0 {
+        n_adjacent_peaks
+    } else {
+        0
+    };
 
     // we are already done with this peak and its adjacent neighbours and
     // can add it to collector
@@ -378,6 +408,8 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         lift,
         at_left_edge,
         at_right_edge,
+        left_edge_peaks,
+        right_edge_peaks,
     );
 
     // check if there is world left left of the present peak
@@ -393,7 +425,15 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
 
         // going into left recursion, not a tail call, but for most terrains
         // this is much rarer than right recursions
-        let left_pars = RecursorPars::new(lift, water_left, start, end_left, nest + 1);
+        let left_pars = RecursorPars::new(
+            lift,
+            water_left,
+            start,
+            end_left,
+            new_left_edge_peaks,
+            new_right_edge_peaks,
+            nest + 1,
+        );
         collector = recursor(left_pars, &grounds_left, collector);
     }
 
@@ -412,7 +452,15 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         collector.set_lift(level, i);
     }
 
-    let right_pars = RecursorPars::new(lift, water_right, start_right, end, nest + 1);
+    let right_pars = RecursorPars::new(
+        lift,
+        water_right,
+        start_right,
+        end,
+        new_left_edge_peaks,
+        new_right_edge_peaks,
+        nest + 1,
+    );
 
     // Tail Call  It would be quite interesting to know if tail call optimization works for
     // this function. It seems to be quite a difficult topic in Rust.

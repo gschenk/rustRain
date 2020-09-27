@@ -151,14 +151,14 @@ mod tests {
                 vec![0, 0, 3, 2, 3, 1, 1],
                 vec![1.5, 1.5, 3.0, 3.0, 3.0, 2.5, 2.5],
             ),
-        ];
-        // these tests fail spectacularly!
-        let known_bugs = vec![
             Case(
                 1,
             vec![  8,1,8,8,1 ],
             vec![ 8.0, 4.0, 8.0, 8.0, 3.0 ],
                 )
+        ];
+        // these tests fail spectacularly!
+        let known_bugs = vec![
         ];
 
         if token == "simple" {
