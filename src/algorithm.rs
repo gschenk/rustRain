@@ -184,6 +184,13 @@ pub fn raise(p: Problem) -> Solution {
     return Solution::new(levels, &p.grounds);
 }
 
+// well_volume calculates volume of a well from its ground semgments and height
+fn well_volume (gs: &[u64], heigth: u64) -> f64 {
+    let volume = heigth as f64 * gs.len() as f64;
+    let land: f64 = gs.iter().map(|g| *g as f64).sum();
+    return volume - land;
+}
+
 struct WaterDistribution {
     left: f64,
     right: f64,
@@ -201,7 +208,6 @@ fn water_distribution(
     peak_width: f64,
     left_grounds: &[u64],
     right_grounds: &[u64],
-    lift: f64,
     at_left_edge: bool,
     at_right_edge: bool,
     left_edge_peaks: usize,
@@ -220,57 +226,25 @@ fn water_distribution(
             right: 0.0,
         };
     }
-    // calculated grounds with their lift value
-    let lifted = |gs: &[u64]| -> Vec<f64> { gs.iter().map(|x| lift + *x as f64).collect() };
 
-    let left_lifted = lifted(left_grounds);
-    let right_lifted = lifted(right_grounds);
-
-    // check if the lowest segments already lifted into the water
-    let f_up = |ls: &[f64]| ls.iter().all(|x| *x > NTOL);
-    let left_up: bool = f_up(&left_lifted);
-    let right_up: bool = f_up(&right_lifted);
-
-    // if either range has shifted fully up water displacement is used
-    if left_up || right_up {
-        // closure on water calculation for each subspace
-        let f_water = |ls: &[f64]| -> f64 {
-            let volume = (peak_heigth as f64 + lift) * ls.len() as f64;
-            let land: f64 = ls.iter().filter(|x| *x > &0.0).sum();
-            return volume - land;
-        };
-        let left = f_water(&left_lifted);
-        let right = f_water(&right_lifted);
-        //check calculation
-        if (left + right - water).abs() > 1e2 * NTOL.abs() {
-            panic!(
-                "water not conserved! total: {}, left: {}, right: {}, grounds {:?}, {}",
-                water,
-                left,
-                right,
-                (left_grounds, right_grounds),
-                NTOL
-            );
-        }
-        return WaterDistribution { left, right };
-    }
-
-    // if both ranges have parts that are still submerged displacment is not limiting water
+    // If both ranges have parts that are still submerged displacment is not limiting water
     // uptake. Water is distributed by ranges only, that represents the area it rains upon.
+    // The peak(s) separating left and right ranges are distributed evenly.
+    let f_dist_range = |gs: &[u64]| peak_width / 2.0 + gs.len() as f64;
 
-    // distribute water from peaks evenly to either side
-    let mut left_range = peak_width / 2.0 + left_grounds.len() as f64;
-    let mut right_range = peak_width / 2.0 + right_grounds.len() as f64;
-
-    // correct for boundary effects:
+    // distribute water from peaks evenly to either side, and correct for boundary effects:
     // (The problem has impermeable boundaries. When these are next to the ranges considered
     // here they behave differently than other tiles.)
-    if !at_right_edge {
-        right_range += 0.5f64.max(right_edge_peaks as f64);
-    }
-    if !at_left_edge {
-        left_range += 0.5f64.max(left_edge_peaks as f64);
-    }
+    let left_range = if !at_left_edge {
+        f_dist_range(left_grounds) + 0.5f64.max(left_edge_peaks as f64)
+    } else {
+        f_dist_range(left_grounds)
+    };
+    let right_range = if !at_right_edge {
+        f_dist_range(right_grounds) + 0.5f64.max(right_edge_peaks as f64)
+    } else {
+        f_dist_range(right_grounds)
+    };
     println!("right peak: {}", right_edge_peaks);
 
     let f_rain = |r| r * water / (left_range + right_range);
@@ -278,13 +252,8 @@ fn water_distribution(
     let right_rain = f_rain(right_range);
 
     // check if well has enough space to hold water
-    let f_well_volume = |gs: &[u64]| -> f64 {
-        let volume = peak_heigth as f64 * gs.len() as f64;
-        let land: f64 = gs.iter().map(|g| *g as f64).sum();
-        return volume - land;
-    };
-    let left_well_volume = f_well_volume(left_grounds);
-    let right_well_volume = f_well_volume(right_grounds);
+    let left_well_volume = well_volume(left_grounds, peak_heigth);
+    let right_well_volume = well_volume(right_grounds, peak_heigth);
 
     // if either side has not enough space to hold rain, distribute excees to the other side
     let mut left = left_rain;
@@ -292,16 +261,9 @@ fn water_distribution(
     if left_rain > left_well_volume {
         left = left_well_volume;
         right = water - left;
-    }
-    if right_rain > right_well_volume {
+    } else if right_rain > right_well_volume {
         right = right_well_volume;
         left = water - right;
-    }
-    if (right_well_volume + left_well_volume) < water {
-        panic!(
-            "water doesnt fit into wells: {} {} {}",
-            water, right_well_volume, left_well_volume
-        )
     }
 
     return WaterDistribution { left, right };
@@ -405,7 +367,6 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         n_adjacent_peaks as f64,
         &grounds_left,
         &grounds_right,
-        lift,
         at_left_edge,
         at_right_edge,
         left_edge_peaks,
