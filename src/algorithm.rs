@@ -186,6 +186,7 @@ fn water_distribution(
     has_left: bool,
     has_right: bool,
     peak_heigth: u64,
+    peak_width: f64,
     left_grounds: &[u64],
     right_grounds: &[u64],
     lift: f64,
@@ -243,13 +244,21 @@ fn water_distribution(
     // if both ranges have parts that are still submerged displacment is not limiting water
     // uptake. Water is distributed by ranges only, that represents the area it rains upon.
 
-    // correct for right boundaries
-    let left_corr: f64 = if at_left_edge { 0.5 } else { 0.0 };
-    let right_corr: f64 = if at_right_edge { 0.5 } else { 0.0 };
-    // one unit is added to both ranges to distribute water that ran off segment
-    // that are missing here.
-    let left_range: f64 = 1.0 - left_corr + left_grounds.len() as f64;
-    let right_range: f64 = 1.0 - right_corr + right_grounds.len() as f64;
+    // distribute water from peaks evenly to either side
+    let mut left_range = peak_width/2.0  + left_grounds.len() as f64;
+    let mut right_range = peak_width/2.0 + right_grounds.len() as f64;
+
+    // correct for boundary effects
+    if at_left_edge && at_right_edge {
+    } else if at_left_edge {
+        right_range += 0.5;
+    } else if at_right_edge {
+        left_range += 0.5;
+    } else {
+        left_range += 0.5;
+        right_range += 0.5;
+    }
+
 
     let f_rain = |r| r * water / (left_range + right_range);
     let left_rain = f_rain(left_range);
@@ -363,6 +372,7 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         has_left,
         has_right,
         *peak_heigth,
+        n_adjacent_peaks as f64,
         &grounds_left,
         &grounds_right,
         lift,
