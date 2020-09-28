@@ -19,14 +19,6 @@ The program returns a list of final levels of water and land to STDOUT.
 
 
 ## Known Issues
-- There is no proper solver to minimize the levelling function implemented.
-  The present one is just a placeholder for prototyping the algorithm.
-
-- The levelling function has bad properties and leads to stiff problem. In
-  particular the discontinuity at `x > 0` has to be fixed to allow eg golden
-  section method solver. Such a solver will be tolerant to stiffness due to
-  inherent discontinuity of the function.
-
 - Data structures are often not passed in a good way. This leaves room for
   optimisations.
 
@@ -50,28 +42,23 @@ The program returns a list of final levels of water and land to STDOUT.
 - level profile `p_i = p_j` for all `i, j < N`
 
 
-### Raise Land Algorithm (chosen algorithm)
-- start with water level `l_i = d` for all _i_
+### Divide at Watershed Algorithm (chosen algorithm)
 - (fn 1) identify rightmost highest peak(s) with height `r_max`
-- raise land until highest point `r_max = d` thus `r_i = p_i - p_max + d` 
-- increase water level by water displacement `l = d + sum(r_i)/N` where
-  `l_i = l` for all `i`
-- incrementally increase water level with adaptive step size until
-  `l - r_max <= EPSILON` (that's a real first watershed moment)
-- distribute water between segments left, and right of the peak. For sufficiently
- raised sub-ranges the maximum amount of water that can be taken is determined
- by water displacement of sub-surface land. If land is not fully raised
- distribute by area. **This does not work right in certain cases**
-- for `m` peaks with height `r_i = l_i` we get `m+1` independent problems.
-  Recursion of (fn 1)
-- return from (fn 1) when no peaks are left, fully raise all segments in sub
-  problem `r_i = p_i`
-
+- check if adjacent peaks segments have same height, if yes add to peak
+- define range left and right of peak
+- distribute water based on relative size of left/right ranges [this step
+  needs careful corrections for boundary effects]
+- check if distributed water for a range exceeds its holding capacity, if yes
+  distribute to other side.
+- determine average water level in each range for sum of water + displacement by
+  submerged ground
+- return (fn 1): recursion into left problem (fn 1) with left range and left water as parameters
+- tail return (fn 1): recursion into right problem (fn 1) with right range, water as parameter
+- return result when peak is already submerged
+- return result when peak is rightmost field in range
+- average over two passes, one with reversed `profile` vector, then average results;
+  this removes a boundary problem that distributes slightly more water to the right.
 
 #### Notes
-Advantage of this algorithm is that no water is distributed and the problem of
-re-distributing water onto a set of segments where water levels are already in
-equilibrium will not occur.
-
-Recursion depth is also limited by the largest possible number of peaks and one
-`(ceiling(N/2) - 1) + 1`.
+Recursion depth is limited by the largest possible number of peaks and one
+`s = (ceiling(N/2) - 1) + 1`. Complexity is at its worst O[2^s].

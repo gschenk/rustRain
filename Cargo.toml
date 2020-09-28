@@ -1,6 +1,6 @@
 [package]
 name = "rain"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["gerald schenk <gschenk@gmx.net>"]
 edition = "2018"
 

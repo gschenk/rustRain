@@ -29,6 +29,6 @@ fn main() {
     let solver = solutions::select_fn(&problem);
 
     // calculate results and print them
-    println!("Resulting water and ground levels:");
+    println!("Resulting absolute water levels and ground levels:");
     println!("{:?}", solver(problem).levels);
 }

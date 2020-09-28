@@ -8,117 +8,29 @@
 // is found and a new saturation level reached.
 
 use crate::solutions::Solution;
-use crate::zero;
-use crate::{solver, Problem};
+use crate::Problem;
 use std::iter::successors;
-
-const NTOL: f64 = -16.0 * zero::EPSILON; // this tolerance must be larger as the solver's
-
-// toggles a hackish fix to water distribution, warning doubles effort!
-const SYMMETRY_HACK: bool = true;
-
-// levelling_equation
-// when this equation returns zero, the highest peak and water level are equal
-// its first argument x is a value by which the ground is shifted
-fn levelling_equation(x: f64, water: f64, grounds: &[u64]) -> f64 {
-    // we lifted land all the way up, stop solver
-    if x.abs() <= zero::EPSILON {
-        return 0.0;
-    };
-
-    // we lifted land too high
-    if x >= 0.0 {
-        return x;
-    };
-
-    let grounds_size = grounds.len() as f64;
-
-    // find level of the present peaks
-    let grounds_max = *grounds.iter().max().unwrap() as f64;
-
-    // calculates the volume containing water and ground normalized to segments
-    let underwater = x + grounds_max;
-
-    // calculates the displaced volume for a given lift value x
-    let displace: f64 = grounds
-        .iter()
-        .map(move |g| x + *g as f64)
-        .filter(|x| *x > 0.0)
-        .sum();
-
-    // returns normalized delta
-    let delta = underwater - (displace + water) / grounds_size;
-    return delta;
-}
-
-// Segment stores intermediate results from recursion
-#[derive(Debug)]
-struct Segment {
-    index: usize, // index of segment, as in grounds vector
-    nest: u64,    // recursion depth when result was found
-    lift: f64,
-    done: bool, // true when result contains final data
-    level: f64,
-    ground: u64,
-}
-
-impl Segment {
-    fn new(index: usize, nest: u64, lift: f64, done: bool, level: f64, ground: u64) -> Segment {
-        return Segment {
-            index,
-            nest,
-            lift,
-            done,
-            level,
-            ground,
-        };
-    }
-    fn init(index: usize) -> Segment {
-        return Segment {
-            index,
-            nest: 0,
-            lift: f64::NEG_INFINITY,
-            done: false,
-            level: f64::NEG_INFINITY,
-            ground: 0,
-        };
-    }
-}
 
 // Collector accumulates results and intermediate results from each
 // recursion call
 #[derive(Debug)]
 struct Collector {
-    segments: Vec<Segment>,
+    segments: Vec<f64>,
 }
 
 impl Collector {
     // constructs a collector with segment's initial values
     fn new(size: usize) -> Self {
-        let segment0 = Segment::init(0);
-        let segments: Vec<Segment> =
-            successors(Some(segment0), |s| Some(Segment::init(s.index + 1)))
-                .take(size)
-                .collect();
+        let segments: Vec<f64> = successors(Some(0.0), |s| Some(*s)).take(size).collect();
         return Collector { segments };
     }
-    fn _get_level(&self, i: usize) -> f64 {
-        return self.segments[i].level;
-    }
-    fn _get_lift(&self, i: usize) -> f64 {
-        return self.segments[i].lift;
-    }
     fn set_level(&mut self, level: f64, i: usize) {
-        self.segments[i].level = level;
-    }
-    fn set_lift(&mut self, lift: f64, i: usize) {
-        self.segments[i].lift = lift;
+        self.segments[i] = level;
     }
 }
 
 #[derive(Debug)]
 struct RecursorPars {
-    lift: f64,
     water: f64,
     start: usize,
     end: usize,
@@ -129,7 +41,6 @@ struct RecursorPars {
 
 impl RecursorPars {
     fn new(
-        lift: f64,
         water: f64,
         start: usize,
         end: usize,
@@ -138,7 +49,6 @@ impl RecursorPars {
         nest: u64,
     ) -> Self {
         return Self {
-            lift,
             water,
             start,
             end,
@@ -151,41 +61,35 @@ impl RecursorPars {
 
 // raise initialises and calls the recursion function and pieces results together
 pub fn raise(p: Problem) -> Solution {
-    // initial lift value, it's negative until the end
-    let lift0: f64 = 0.8 * p.water_0 - p.ground_max as f64;
-
     // initialize collector
     let collector0 = Collector::new(p.groundsize);
 
-    let recursor_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
+    let recursor_pars = RecursorPars::new(p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
     let collector = recursor(recursor_pars, &p.grounds, collector0);
 
     let Collector { segments } = collector;
 
-    let levels: Vec<f64> = segments.iter().map(|s| s.level - s.lift).collect();
+    let levels: Vec<f64> = segments.iter().map(|s| *s).collect();
 
-    if SYMMETRY_HACK {
-        // calculate the water levels in reverse, starting left going right
-        // then average results of both calculations
-        let rev_pars = RecursorPars::new(lift0, p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
-        let rev_grounds: Vec<u64> = p.grounds.clone().iter().rev().map(|a| *a).collect();
-        let rev_coll0 = Collector::new(p.groundsize);
-        let rev_collector = recursor(rev_pars, &rev_grounds, rev_coll0);
-        let average_levels: Vec<f64> = rev_collector
-            .segments
-            .iter()
-            .rev()
-            .map(|s| s.level - s.lift)
-            .zip(levels)
-            .map(|(a, b)| (a + b) / 2.0)
-            .collect();
-        return Solution::new(average_levels, &p.grounds);
-    }
-    return Solution::new(levels, &p.grounds);
+    // calculate the water levels in reverse, starting left going right
+    let rev_pars = RecursorPars::new(p.water_tot as f64, 0, p.groundsize - 1, 0, 0, 0);
+    let rev_grounds: Vec<u64> = p.grounds.clone().iter().rev().map(|a| *a).collect();
+    let rev_coll0 = Collector::new(p.groundsize);
+    let rev_collector = recursor(rev_pars, &rev_grounds, rev_coll0);
+
+    // then average results of both calculations
+    let average_levels: Vec<f64> = rev_collector
+        .segments
+        .iter()
+        .rev()
+        .zip(levels)
+        .map(|(a, b)| (a + b) / 2.0)
+        .collect();
+    return Solution::new(average_levels, &p.grounds);
 }
 
 // well_volume calculates volume of a well from its ground semgments and height
-fn well_volume (gs: &[u64], heigth: u64) -> f64 {
+fn well_volume(gs: &[u64], heigth: u64) -> f64 {
     let volume = heigth as f64 * gs.len() as f64;
     let land: f64 = gs.iter().map(|g| *g as f64).sum();
     return volume - land;
@@ -271,7 +175,6 @@ fn water_distribution(
 fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Collector {
     // destructure parameters
     let RecursorPars {
-        lift: _,
         water,
         start,
         end,
@@ -280,32 +183,8 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         nest,
     } = pars;
 
-    // the equation f(x) to be solved in the iteration solver
-    // here it is curried with a closure on its parameters
-    let equation = |x| levelling_equation(x, water, &grounds);
-
-    // running the actual solver
-
-    let lift = solver::iterative(pars.lift, equation);
-
-    // finish condition lifted land all the way up
-    if lift > NTOL {
-        // calculate water displacement
-        let displacement: u64 = grounds.iter().sum();
-        let volume = water + displacement as f64;
-        let level = volume / grounds.len() as f64;
-        //write to collector
-        for i in start..end + 1 {
-            collector.segments[i] = Segment::new(i, nest, lift, true, level, grounds[i - start]);
-        }
-        return collector;
-    }
-
-    // find the highest peak, that is now equal with water level
+    // find the highest peak
     let peak_heigth = grounds.iter().max().unwrap();
-
-    // set water level
-    let level = *peak_heigth as f64 + lift;
 
     // find position of peak in list
     let i_peak: usize = grounds.iter().position(|x| x == peak_heigth).unwrap();
@@ -336,11 +215,18 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         0
     };
 
+    // determine if peaks are under water
+    let displace = |gs: &[u64]| -> f64 { gs.iter().map(|g| *g as f64).sum() };
+    let underwater: bool = displace(grounds) + water > *peak_heigth as f64 * grounds.len() as f64;
+
     // we are already done with this peak and its adjacent neighbours and
     // can add it to collector
-    for i in 0..n_adjacent_peaks {
-        collector.segments[i + absolute_peak] =
-            Segment::new(absolute_peak, 0, lift, true, level, grounds[i + i_peak]);
+    if underwater {
+        return collector;
+    } else {
+        for i in 0..n_adjacent_peaks {
+            collector.set_level(grounds[i + i_peak] as f64, i + absolute_peak);
+        }
     }
 
     // grounds left and right of peak
@@ -372,6 +258,10 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
         right_edge_peaks,
     );
 
+    // try something here:
+    let new_level_left = (water_left + displace(grounds_left)) / grounds_left.len() as f64;
+    let new_level_right = (water_right + displace(grounds_right)) / grounds_right.len() as f64;
+
     // check if there is world left left of the present peak
     if has_left {
         let grounds_left = &grounds[..i_peak];
@@ -379,14 +269,13 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
 
         // set water level to these segments
         for i in start..end_left + 1 {
-            collector.set_level(level, i);
-            collector.set_lift(level, i);
+            collector.set_level(new_level_left, i);
+            //println!("{:?}", collector.segments[i]);
         }
 
         // going into left recursion, not a tail call, but for most terrains
         // this is much rarer than right recursions
         let left_pars = RecursorPars::new(
-            lift,
             water_left,
             start,
             end_left,
@@ -408,12 +297,10 @@ fn recursor(pars: RecursorPars, grounds: &[u64], mut collector: Collector) -> Co
 
     // set present water level for segments right of peak
     for i in start_right..end + 1 {
-        collector.set_level(level, i);
-        collector.set_lift(level, i);
+        collector.set_level(new_level_right, i);
     }
 
     let right_pars = RecursorPars::new(
-        lift,
         water_right,
         start_right,
         end,

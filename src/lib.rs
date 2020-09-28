@@ -1,7 +1,6 @@
 pub mod algorithm;
 pub mod input;
 pub mod solutions;
-pub mod solver;
 pub mod zero;
 
 // Problem collects data and characterises problem
@@ -151,15 +150,10 @@ mod tests {
                 vec![0, 0, 3, 2, 3, 1, 1],
                 vec![1.5, 1.5, 3.0, 3.0, 3.0, 2.5, 2.5],
             ),
-            Case(
-                1,
-            vec![  8,1,8,8,1 ],
-            vec![ 8.0, 4.0, 8.0, 8.0, 3.0 ],
-                )
+            Case(1, vec![8, 1, 8, 8, 1], vec![8.0, 4.0, 8.0, 8.0, 3.0]),
         ];
         // these tests fail spectacularly!
-        let known_bugs = vec![
-        ];
+        let known_bugs = vec![];
 
         if token == "simple" {
             return simple;
